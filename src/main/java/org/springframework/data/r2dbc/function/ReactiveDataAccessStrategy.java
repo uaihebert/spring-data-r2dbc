@@ -20,13 +20,13 @@ import io.r2dbc.spi.RowMetadata;
 import io.r2dbc.spi.Statement;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.dialect.BindMarkersFactory;
+import org.springframework.data.r2dbc.function.convert.OutboundRow;
 import org.springframework.data.r2dbc.function.convert.SettableValue;
 
 /**
@@ -46,18 +46,12 @@ public interface ReactiveDataAccessStrategy {
 	List<String> getAllColumns(Class<?> typeToRead);
 
 	/**
-	 * @param object
-	 * @return {@link SettableValue} that represent an {@code INSERT} of {@code object}.
-	 */
-	List<SettableValue> getValuesToInsert(Object object);
-
-	/**
-	 * Returns a {@link Map} that maps column names to a {@link SettableValue} value.
+	 * Returns a {@link OutboundRow} that maps column names to a {@link SettableValue} value.
 	 *
 	 * @param object must not be {@literal null}.
 	 * @return
 	 */
-	Map<String, SettableValue> getColumnsToUpdate(Object object);
+	OutboundRow getOutboundRow(Object object);
 
 	/**
 	 * Map the {@link Sort} object to apply field name mapping using {@link Class the type to read}.

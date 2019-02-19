@@ -24,12 +24,13 @@ import java.util.Optional;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.r2dbc.function.DatabaseClient;
+import org.springframework.data.r2dbc.function.DefaultReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.function.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.function.convert.MappingR2dbcConverter;
+import org.springframework.data.r2dbc.function.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.R2dbcQueryMethod;
 import org.springframework.data.r2dbc.repository.query.StringBasedR2dbcQuery;
-import org.springframework.data.relational.core.conversion.BasicRelationalConverter;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.repository.query.RelationalEntityInformation;
@@ -57,7 +58,7 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 
 	private final DatabaseClient databaseClient;
 	private final MappingContext<? extends RelationalPersistentEntity<?>, RelationalPersistentProperty> mappingContext;
-	private final MappingR2dbcConverter converter;
+	private final R2dbcConverter converter;
 	private final ReactiveDataAccessStrategy dataAccessStrategy;
 
 	/**
@@ -77,7 +78,12 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 		this.databaseClient = databaseClient;
 		this.mappingContext = mappingContext;
 		this.dataAccessStrategy = dataAccessStrategy;
-		this.converter = new MappingR2dbcConverter(new BasicRelationalConverter(mappingContext));
+
+		if (dataAccessStrategy instanceof DefaultReactiveDataAccessStrategy) {
+			this.converter = ((DefaultReactiveDataAccessStrategy) dataAccessStrategy).getConverter();
+		} else {
+			this.converter = new MappingR2dbcConverter(mappingContext);
+		}
 	}
 
 	/*
@@ -140,7 +146,7 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 
 		private final DatabaseClient databaseClient;
 		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
-		private final MappingR2dbcConverter converter;
+		private final R2dbcConverter converter;
 
 		/*
 		 * (non-Javadoc)

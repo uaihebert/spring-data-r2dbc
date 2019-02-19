@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.function.convert.SettableValue;
 
@@ -109,7 +110,7 @@ public class DefaultReactiveDataAccessStrategyUnitTests {
 	public void shouldUpdateArray() {
 
 		Map<String, SettableValue> columnsToUpdate = strategy
-				.getColumnsToUpdate(new WithCollectionTypes(new String[] { "one", "two" }, null));
+				.getOutboundRow(new WithCollectionTypes(new String[] { "one", "two" }, null));
 
 		Object stringArray = columnsToUpdate.get("string_array").getValue();
 
@@ -121,7 +122,7 @@ public class DefaultReactiveDataAccessStrategyUnitTests {
 	public void shouldConvertListToArray() {
 
 		Map<String, SettableValue> columnsToUpdate = strategy
-				.getColumnsToUpdate(new WithCollectionTypes(null, Arrays.asList("one", "two")));
+				.getOutboundRow(new WithCollectionTypes(null, Arrays.asList("one", "two")));
 
 		Object stringArray = columnsToUpdate.get("string_collection").getValue();
 

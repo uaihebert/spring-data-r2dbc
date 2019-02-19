@@ -15,7 +15,6 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import io.r2dbc.spi.Statement;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -25,11 +24,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.r2dbc.function.BindIdOperation;
-import org.springframework.data.r2dbc.function.BindableOperation;
 import org.springframework.data.r2dbc.function.DatabaseClient;
 import org.springframework.data.r2dbc.function.DatabaseClient.GenericExecuteSpec;
 import org.springframework.data.r2dbc.function.ReactiveDataAccessStrategy;
@@ -70,7 +68,7 @@ public class SimpleR2dbcRepository<T, ID> implements ReactiveCrudRepository<T, I
 		}
 
 		Object id = entity.getRequiredId(objectToSave);
-		Map<String, SettableValue> columns = accessStrategy.getColumnsToUpdate(objectToSave);
+		Map<String, SettableValue> columns = accessStrategy.getOutboundRow(objectToSave);
 		columns.remove(getIdColumnName()); // do not update the Id column.
 		String idColumnName = getIdColumnName();
 		BindIdOperation update = accessStrategy.updateById(entity.getTableName(), columns.keySet(), idColumnName);
@@ -78,7 +76,10 @@ public class SimpleR2dbcRepository<T, ID> implements ReactiveCrudRepository<T, I
 		GenericExecuteSpec exec = databaseClient.execute().sql(update);
 
 		BindSpecAdapter<GenericExecuteSpec> wrapper = BindSpecAdapter.create(exec);
-		columns.forEach(bind(update, wrapper));
+		columns.forEach((k, v) -> {
+			update.bind(wrapper, k, v);
+
+		});
 		update.bindId(wrapper, id);
 
 		return wrapper.getBoundOperation().as(entity.getJavaType()) //
@@ -321,10 +322,5 @@ public class SimpleR2dbcRepository<T, ID> implements ReactiveCrudRepository<T, I
 				.getRequiredPersistentEntity(entity.getJavaType()) //
 				.getRequiredIdProperty() //
 				.getColumnName();
-	}
-
-	private BiConsumer<String, SettableValue> bind(BindableOperation operation, Statement statement) {
-
-		return (k, v) -> operation.bind(statement, v);
 	}
 }
